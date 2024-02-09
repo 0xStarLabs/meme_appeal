@@ -60,11 +60,6 @@ def main():
     configuration()
     private_keys, tokens, proxies, answers = read_files()
     
-    print(private_keys)
-    print(tokens)
-    print(proxies)
-    print(answers)
-
     print("Choose an option:")
     print("1. Run checker")
     print("2. Run checker + appeal")
