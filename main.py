@@ -69,13 +69,13 @@ def main():
     if choice == 1:
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             for index, (private_key, proxy) in enumerate(zip(private_keys, proxies)):
-                executor.submit(check(index, private_key, proxy))
+                executor.submit(check(index + 1, private_key, proxy))
                 time.sleep(random.randint(PAUSE[0], PAUSE[1]))
 
     elif choice == 2:
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             for index, (private_key, token, proxy, answer) in enumerate(zip(private_keys, tokens, proxies, answers)):
-                executor.submit(check_appeal(index, private_key, proxy, token, answer))
+                executor.submit(check_appeal(index + 1, private_key, proxy, token, answer))
                 time.sleep(random.randint(PAUSE[0], PAUSE[1]))
 
 if __name__ == "__main__":
