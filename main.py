@@ -32,13 +32,15 @@ def append_to_file(file_path, string_to_append):
 def check(index, key, proxy):
     login = CheckStatus(index, key, proxy)
     username = login.execute()
-    if not username:
-        print(username)
+    if username == "Not robot":
         append_to_file("./data/success_private_key.txt", key)
         append_to_file("./data/success_proxy.txt", proxy)
+    elif username:
+        append_to_file("./data/to_appeal_private_key.txt", key)
+        append_to_file("./data/to_appeal_proxy.txt", proxy)
     else:
-        append_to_file("./data/fail_private_key.txt", key)
-        append_to_file("./data/fail_proxy.txt", proxy)
+        append_to_file("./data/no_points_private_key.txt", key)
+        append_to_file("./data/no_points_proxy.txt", proxy)
     
 
 def check_appeal(index, key, proxy, token, answer):
@@ -46,14 +48,17 @@ def check_appeal(index, key, proxy, token, answer):
     username = login.execute()
     account = Account.from_key(key)
     
-    if not username:
+    if username == "Not robot":
         append_to_file("./data/success_private_key.txt", key)
         append_to_file("./data/success_proxy.txt", proxy)
-    else:
-        append_to_file("./data/fail_private_key.txt", key)
-        append_to_file("./data/fail_proxy.txt", proxy)
+    elif username:
+        append_to_file("./data/to_appeal_private_key.txt", key)
+        append_to_file("./data/to_appeal_proxy.txt", proxy)
         form = Form(index, proxy, username, token, account.address, answer)
         form.login()
+    else:
+        append_to_file("./data/no_points_private_key.txt", key)
+        append_to_file("./data/no_points_proxy.txt", proxy)
 
 
 def main():
