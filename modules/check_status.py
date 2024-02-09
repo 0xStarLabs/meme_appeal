@@ -52,7 +52,7 @@ class CheckStatus():
                 return f"@{username}"
             else:
                 logger.success(f'| {self.index} | {self.wallet.address} | Is not robot')
-                return None
+                return "Not robot"
 
         except Exception as e:
             logger.error(f"Error in login: {e}")
@@ -64,9 +64,10 @@ class CheckStatus():
             access_token = self.login()
             if access_token:
                 self.client.headers["authorization"] = f"Bearer {access_token}"
-            return self.check_win()
+                return self.check_win()
+            else:
+                return None
 
         except Exception as e:
             logger.error(f"Error in login: {e}")
             return None
-
