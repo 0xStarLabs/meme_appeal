@@ -178,7 +178,16 @@ class Form:
             logger.info(f"{self.index} | Trying to send a form...")
             response = self.client.post('https://dyno.gg/api/forms/ecfaebc1/submit', headers=headers, json=json_data)
 
-            logger.success(f"{self.index} | Form sent successfully.")
+            if "notMember" in response.text:
+                logger.error(f"{self.index} | Discord account is not MemeLand server member.")
+                return True
+
+            if response.status_code == 200:
+                logger.success(f"{self.index} | Form sent successfully.")
+
+            else:
+                logger.error(f"{self.index} | Unknown error: {response.text}")
+
             return True
         except Exception as err:
             logger.error(f"{self.index} | Failed to send a form: {err}")
