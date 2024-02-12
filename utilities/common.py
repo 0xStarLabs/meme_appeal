@@ -13,7 +13,7 @@ def read_files():
     with open("./data/discord_tokens.txt") as file:
         tokens = [line.strip() for line in file if line.strip()]
 
-    with open("./data/appeal_text.txt") as file:
+    with open("./data/appeal_text.txt", encoding='utf-8', errors='ignore') as file:
         answers = [line.strip() for line in file if line.strip()]
 
     while len(proxies) < len(private_keys):
