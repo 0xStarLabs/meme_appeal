@@ -1,5 +1,6 @@
 from loguru import logger
-import tls_client
+from modules import tls_client_local as tls_client
+from config import FORM_WAITING_TIMEOUT
 
 
 class Form:
@@ -246,6 +247,7 @@ class Form:
         session = tls_client.Session(
             client_identifier="chrome_120",
             random_tls_extension_order=True,
+            timeout=FORM_WAITING_TIMEOUT,
         )
 
         if proxy:
