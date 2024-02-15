@@ -188,6 +188,46 @@ class Form:
                 return True, True
             else:
                 logger.error(f"{self.index} | Unknown error: {response.text}")
+
+            json_data = {
+                'formData': [
+                    {
+                        "question": "What is your X handle?",
+                        "type": "shortAnswer",
+                        "id": "572a",
+                        "required": False,
+                        "answer": self.twitter_username
+                    },
+                    {
+                        "question": "What is the wallet address linked to the X handle above?",
+                        "type": "shortAnswer",
+                        "id": "63f9",
+                        "required": False,
+                        "description": "",
+                        "answer": self.wallet_address
+                    },
+                    {
+                        "question": "Please describe your issue",
+                        "type": "paragraph",
+                        "id": "b370",
+                        "required": True,
+                        "answer": self.answer
+                    }
+                ],
+            }
+
+            logger.info(f"{self.index} | Trying to send a form...")
+            response = self.client.post('https://dyno.gg/api/forms/cba26bfa/submit', headers=headers, json=json_data)
+
+            if "notMember" in response.text:
+                logger.error(f"{self.index} | Discord account is not MemeLand server member.")
+                return True, False
+
+            if response.status_code == 200:
+                logger.success(f"{self.index} | Form sent successfully.")
+                return True, True
+            else:
+                logger.error(f"{self.index} | Unknown error: {response.text}")
                 return True, False
 
         except Exception as err:

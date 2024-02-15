@@ -29,6 +29,17 @@ def append_to_file(file_path, string_to_append):
             file.write(string_to_append + '\n')
 
 
+def remove_line_from_file(file_path, string_to_remove):
+    with file_lock:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        with open(file_path, 'w') as file:
+            for line in lines:
+                if line.strip("\n") != string_to_remove:
+                    file.write(line)
+
+
 def check(index, key, proxy):
     login = CheckStatus(index, key, proxy)
     username = login.execute()
@@ -53,6 +64,11 @@ def check_appeal(index, key, proxy, token, answer):
         ok, success = form.login()
         if success:
             append_to_file("./data/success_accounts.txt", f"{key}:{proxy}:{username}:{token}:{answer}")
+            remove_line_from_file("data/proxies.txt", proxy)
+            remove_line_from_file("data/discord_tokens.txt", token)
+            remove_line_from_file("data/private_keys.txt", key)
+            remove_line_from_file("data/appeal_text.txt", answer)
+
         else:
             append_to_file("./data/failed_accounts.txt", f"{key}:{proxy}:{username}:{token}:{answer}")
     else:
@@ -60,27 +76,13 @@ def check_appeal(index, key, proxy, token, answer):
     time.sleep(random.randint(PAUSE[0], PAUSE[1]))
 
 
-def check_if_form_is_working(index, key, proxy, token, answer):
-    login = CheckStatus(index, key, proxy)
-    username = login.execute()
-    account = Account.from_key(key)
-
-    if username == "Not robot":
-        logger.info("Account is not a robot. Please paste another account.")
-        return "not robot"
-
-    elif username:
-        form = Form(index, proxy, username, token, account.address, answer)
-        ok, success = form.login()
-        if success:
-            logger.success("Form is working. Starting all accounts!")
-            return "ok"
-        else:
-            return "form dead"
-
+def check_if_form_is_working(form):
+    ok, success = form.login()
+    if success:
+        logger.success("Form is working. Starting all accounts!")
+        return "ok"
     else:
-        logger.info("Account is not working. Please paste another account.")
-        return "not working"
+        return "form dead"
 
 
 def main():
@@ -100,17 +102,31 @@ def main():
             executor.map(check, indexes, private_keys, proxies)
 
     elif choice == 2:
-        while True:
-            ok = check_if_form_is_working(1, private_keys[0], proxies[0], tokens[0], answers[0])
-            if ok == "ok":
-                break
-            elif ok == "not working" or ok == "not robot":
-                return
-            elif ok == "form dead":
-                time.sleep(random.randint(PAUSE_RETRIES[0], PAUSE_RETRIES[1]))
-                continue
-            else:
-                return
+        login = CheckStatus(1, private_keys[0], proxies[0])
+        username = login.execute()
+        account = Account.from_key(private_keys[0])
+
+        if username == "Not robot":
+            logger.info("Account is not a robot. Please paste another account.")
+            return "not robot"
+
+        elif username:
+            while True:
+                form = Form(1, proxies[0], username, tokens[0], account.address, answers[0])
+                ok = check_if_form_is_working(form)
+                if ok == "ok":
+                    break
+                
+                elif ok == "form dead":
+                    time.sleep(random.randint(PAUSE_RETRIES[0], PAUSE_RETRIES[1]))
+                    continue
+
+                else:
+                    return
+
+        else:
+            logger.info("Account is not working. Please paste another account.")
+            return "not working"
 
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
             executor.map(check_appeal, indexes, private_keys, proxies, tokens, answers)
