@@ -12,8 +12,8 @@ from modules.form import Form
 from concurrent.futures import ThreadPoolExecutor
 from utilities.common import read_files
 
-
 file_lock = threading.Lock()
+
 
 def configuration():
     urllib3.disable_warnings()
@@ -33,55 +33,88 @@ def check(index, key, proxy):
     login = CheckStatus(index, key, proxy)
     username = login.execute()
     if username == "Not robot":
-        append_to_file("./data/success_private_key.txt", key)
-        append_to_file("./data/success_proxy.txt", proxy)
+        append_to_file("./data/success_accounts.txt", f"{key}:{proxy}:{username}")
     elif username:
-        append_to_file("./data/to_appeal_private_key.txt", key)
-        append_to_file("./data/to_appeal_proxy.txt", proxy)
+        append_to_file("./data/robot_accounts.txt", f"{key}:{proxy}:{username}")
     else:
-        append_to_file("./data/no_points_private_key.txt", key)
-        append_to_file("./data/no_points_proxy.txt", proxy)
-    
+        append_to_file("./data/failed_accounts.txt", f"{key}:{proxy}:{username}")
+    time.sleep(random.randint(PAUSE[0], PAUSE[1]))
+
 
 def check_appeal(index, key, proxy, token, answer):
     login = CheckStatus(index, key, proxy)
     username = login.execute()
     account = Account.from_key(key)
-    
+
     if username == "Not robot":
-        append_to_file("./data/success_private_key.txt", key)
-        append_to_file("./data/success_proxy.txt", proxy)
+        append_to_file("./data/success_accounts.txt", f"{key}:{proxy}:{username}:{token}")
     elif username:
-        append_to_file("./data/to_appeal_private_key.txt", key)
-        append_to_file("./data/to_appeal_proxy.txt", proxy)
         form = Form(index, proxy, username, token, account.address, answer)
-        form.login()
+        ok, success = form.login()
+        if success:
+            append_to_file("./data/success_accounts.txt", f"{key}:{proxy}:{username}:{token}:{answer}")
+        else:
+            append_to_file("./data/failed_accounts.txt", f"{key}:{proxy}:{username}:{token}:{answer}")
     else:
-        append_to_file("./data/no_points_private_key.txt", key)
-        append_to_file("./data/no_points_proxy.txt", proxy)
+        append_to_file("./data/failed_accounts.txt", f"{key}:{proxy}:{username}:{token}:{answer}")
+    time.sleep(random.randint(PAUSE[0], PAUSE[1]))
+
+
+def check_if_form_is_working(index, key, proxy, token, answer):
+    login = CheckStatus(index, key, proxy)
+    username = login.execute()
+    account = Account.from_key(key)
+
+    if username == "Not robot":
+        logger.info("Account is not a robot. Please paste another account.")
+        return "not robot"
+
+    elif username:
+        form = Form(index, proxy, username, token, account.address, answer)
+        ok, success = form.login()
+        if success:
+            logger.success("Form is working. Starting all accounts!")
+            return "ok"
+        else:
+            return "form dead"
+
+    else:
+        logger.info("Account is not working. Please paste another account.")
+        return "not working"
 
 
 def main():
     configuration()
     private_keys, tokens, proxies, answers = read_files()
-    
+
     print("Choose an option:")
     print("1. Run checker")
     print("2. Run checker + appeal")
     choice = int(input("Enter your choice: "))
     num_threads = int(input("Enter the number of threads: "))
-    
+
+    indexes = [index + 1 for index in range(len(private_keys))]
+
     if choice == 1:
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            for index, (private_key, proxy) in enumerate(zip(private_keys, proxies)):
-                executor.submit(check(index + 1, private_key, proxy))
-                time.sleep(random.randint(PAUSE[0], PAUSE[1]))
+            executor.map(check, indexes, private_keys, proxies)
 
     elif choice == 2:
+        while True:
+            ok = check_if_form_is_working(1, private_keys[0], proxies[0], tokens[0], answers[0])
+            if ok == "ok":
+                break
+            elif ok == "not working" or ok == "not robot":
+                return
+            elif ok == "form dead":
+                time.sleep(5)
+                continue
+            else:
+                return
+
         with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            for index, (private_key, token, proxy, answer) in enumerate(zip(private_keys, tokens, proxies, answers)):
-                executor.submit(check_appeal(index + 1, private_key, proxy, token, answer))
-                time.sleep(random.randint(PAUSE[0], PAUSE[1]))
+            executor.map(check_appeal, indexes, private_keys, proxies, tokens, answers)
+
 
 if __name__ == "__main__":
     main()

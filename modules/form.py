@@ -1,6 +1,7 @@
 from loguru import logger
 import tls_client
 
+
 class Form:
     def __init__(self, index: int, proxy: str, twitter_username: str, discord: str, wallet_address: str, answer: str):
         self.index = index
@@ -24,7 +25,7 @@ class Form:
                 else:
                     raise Exception(f"Failed to init data 5 times. Exit...")
 
-    def login(self) -> bool:
+    def login(self):
         try:
             headers = {
                 'authority': 'dyno.gg',
@@ -180,19 +181,18 @@ class Form:
 
             if "notMember" in response.text:
                 logger.error(f"{self.index} | Discord account is not MemeLand server member.")
-                return True
+                return True, False
 
             if response.status_code == 200:
                 logger.success(f"{self.index} | Form sent successfully.")
-
+                return True, True
             else:
                 logger.error(f"{self.index} | Unknown error: {response.text}")
+                return True, False
 
-            return True
         except Exception as err:
             logger.error(f"{self.index} | Failed to send a form: {err}")
-            return False
-
+            return False, False
 
     @staticmethod
     def create_client(proxy: str) -> tls_client.Session:
