@@ -6,7 +6,7 @@ from eth_account import Account
 import threading
 
 from loguru import logger
-from config import PAUSE
+from config import PAUSE, PAUSE_RETRIES
 from modules.check_status import CheckStatus
 from modules.form import Form
 from concurrent.futures import ThreadPoolExecutor
@@ -107,7 +107,7 @@ def main():
             elif ok == "not working" or ok == "not robot":
                 return
             elif ok == "form dead":
-                time.sleep(5)
+                time.sleep(random.randint(PAUSE_RETRIES[0], PAUSE_RETRIES[1]))
                 continue
             else:
                 return

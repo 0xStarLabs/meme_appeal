@@ -1,1 +1,2 @@
 PAUSE = [5, 10]
+PAUSE_RETRIES = [5, 8]
